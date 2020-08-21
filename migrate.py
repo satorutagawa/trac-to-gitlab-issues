@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 '''
 Copyright © 2013
     Stefan Vigerske <svigerske@gams.com>
@@ -68,6 +69,8 @@ dest_project_name = config.get('target', 'project_name')
 
 gitlab_url = config.get('target', 'url')
 gitlab_access_token = config.get('target', 'access_token')
+gitlab_user_ids_map = ast.literal_eval(config.get('target', 'user_ids'))
+gitlab_impers_tokens_map = ast.literal_eval(config.get('target', 'impers_tokens'))
 dest_ssl_verify = config.getboolean('target', 'ssl_verify')
 overwrite = config.getboolean('target', 'overwrite')
 
@@ -322,7 +325,8 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
         if status is None :
             status = src_ticket_data['status']
 
-        reporter_id = dest.get_user_id(users_map[src_ticket_data['reporter']], True)
+        #reporter_id = dest.get_user_id(users_map[src_ticket_data['reporter']], True)
+        reporter_id = gitlab_user_ids_map[users_map[src_ticket_data['reporter']]]
 
         labels = []
         if add_label:
@@ -405,11 +409,14 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
             created_at = str(convert_xmlrpc_datetime(src_ticket[1]))
         )
         if owner != '' :
-            new_issue_data.assignee = dest.get_user_id(users_map[owner], True)
+            new_issue_data.assignee = gitlab_user_ids_map[users_map[owner]]
 
         if 'milestone' in src_ticket_data:
             milestone = src_ticket_data['milestone']
             if milestone and milestone in milestone_map_id:
+                new_issue_data.milestone = milestone_map_id[milestone]
+            else:
+                milestone_map_id[milestone] = get_dest_milestone_id(dest, dest_project_id, milestone)
                 new_issue_data.milestone = milestone_map_id[milestone]
 
         issue = dest.create_issue(dest_project_id, new_issue_data)
@@ -433,7 +440,8 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
             change_type = change[2]
             print(("  %s by %s (%s -> %s)" % (change_type, change[1], change[3][:40].replace("\n", " "), change[4][:40].replace("\n", " "))).encode("ascii", "replace"))
             assert attachment is None or change_type == "comment", "an attachment must be followed by a comment"
-            author = dest.get_user_id(users_map[change[1]], True)
+            #author = dest.get_user_id(users_map[change[1]], True)
+            author = gitlab_user_ids_map[users_map[change[1]]]
             if change_type == "attachment":
                 # The attachment will be described in the next change!
                 attachment = change
@@ -501,7 +509,8 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
                 # workaround #3 dest.update_issue_property(dest_project_id, issue, author, change_time, 'labels')
                 dest.comment_issue(dest_project_id, issue, Notes(note = 'Changing component from ~' + change[3] + ' to ~' + change[4] + '.', created_at = change_time, author = author))
             elif change_type == "owner" :
-                issue.assignee = dest.get_user_id(users_map[change[4]], True)
+                #issue.assignee = dest.get_user_id(users_map[change[4]], True)
+                issue.assignee = gitlab_user_ids_map[users_map[change[4]]]
                 # workaround #3 dest.update_issue_property(dest_project_id, issue, author, change_time, 'assignee')
                 if change[3] != '' :
                     dest.comment_issue(dest_project_id, issue, Notes(note = 'Changing assignee from @' + users_map[change[3]] + ' to @' + users_map[change[4]] + '.', created_at = change_time, author = author))
@@ -582,7 +591,8 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
         if issue.state == 'closed' :
             dest.update_issue_property(dest_project_id, issue, None, None, 'state')
         if newowner is not None and newowner != owner :
-            issue.assignee = dest.get_user_id(users_map[newowner], True)
+            #issue.assignee = dest.get_user_id(users_map[newowner], True)
+            issue.assignee = gitlab_user_ids_map[users_map[newowner]]
             dest.update_issue_property(dest_project_id, issue, None, None, 'assignee')
         if issue.labels != new_issue_data.labels :
             dest.update_issue_property(dest_project_id, issue, None, None, 'labels')
@@ -601,7 +611,8 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
                 print('  ignore cc ' + person)
                 continue
             print('  subscribe ' + users_map[person])
-            person_id = dest.get_user_id(users_map[person], True)
+            #person_id = dest.get_user_id(users_map[person], True)
+            person_id = gitlab_user_ids_map[users_map[person]]
             dest.subscribe_issue(dest_project_id, issue, person_id)
 
 
@@ -633,24 +644,24 @@ def convert_wiki(source, dest, dest_project_id):
 
 
 if __name__ == "__main__":
-    dest = Connection(gitlab_url, gitlab_access_token, dest_ssl_verify)
+    dest = Connection(gitlab_url, gitlab_access_token, dest_ssl_verify, gitlab_impers_tokens_map)
 
     source = xmlrpclib.ServerProxy(trac_url)
     dest_project_id = get_dest_project_id(dest, dest_project_name)
 
-    if svngit_mapfile is not None :
-        svngit_map = dict()
-        for line in open(svngit_mapfile, 'r') :
-            l = line.split()
-            assert len(l) >= 2, line
-            githash = l[0]
-            svnrev = l[1]
-            svnbranch = l[2][1:] if len(l) > 2 else 'trunk'
-            #print l[1], l[0]
-            # if already have a svn revision entry from branch trunk, then ignore others
-            if svnrev in svngit_map and svngit_map[svnrev][1] == 'trunk' :
-                continue
-            svngit_map[svnrev] = [githash, svnbranch]
+#    if svngit_mapfile is not None :
+#        svngit_map = dict()
+#        for line in open(svngit_mapfile, 'r') :
+#            l = line.split()
+#            assert len(l) >= 2, line
+#            githash = l[0]
+#            svnrev = l[1]
+#            svnbranch = l[2][1:] if len(l) > 2 else 'trunk'
+#            #print l[1], l[0]
+#            # if already have a svn revision entry from branch trunk, then ignore others
+#            if svnrev in svngit_map and svngit_map[svnrev][1] == 'trunk' :
+#                continue
+#            svngit_map[svnrev] = [githash, svnbranch]
 
     if must_convert_issues:
         convert_issues(source, dest, dest_project_id, only_issues = only_issues, blacklist_issues = blacklist_issues)

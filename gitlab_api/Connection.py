@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Copyright © 2013
     Stefan Vigerske <svigerske@gams.com>
@@ -53,7 +54,7 @@ class Connection(object):
     Connection to the gitlab API
     """
 
-    def __init__(self, url, access_token, ssl_verify):
+    def __init__(self, url, access_token, ssl_verify, impers_tokens):
         """
 
         :param url: "https://gitlab.example.com/api/v4"
@@ -62,7 +63,7 @@ class Connection(object):
         self.url = url
         self.access_token = access_token
         self.verify = ssl_verify
-        self.impers_tokens = dict()  #TODO would be nice to delete these tokens when finished
+        self.impers_tokens = impers_tokens  #TODO would be nice to delete these tokens when finished
         self.user_ids = dict()  # username to user_id mapping
         self.uploaded_files = dict() # md5-hash to upload-file response (dict)
         self.addedlabels = set() # labels that were added already
@@ -163,6 +164,7 @@ class Connection(object):
         for milestone in milestones:
             if milestone['title'] == milestone_name:
                 return milestone
+        raise BaseException('Milestone %s not known' % milestone)
 
     def get_group_id(self, grouppath):
         groups = self.get("/groups")
@@ -179,6 +181,7 @@ class Connection(object):
             if user['username'] == username:
                 self.user_ids[username] = user["id"]
                 return user["id"]
+        raise BaseException("id not found for user %s" % username)
         if create :
             print 'Creating user', username
             userdata = {
@@ -204,15 +207,16 @@ class Connection(object):
     def get_user_imperstoken(self, userid) :
         if userid in self.impers_tokens :
             return self.impers_tokens[userid];
-        data = {
-            'user_id' : userid,
-            'name' : 'trac2gitlab',
-            'expires_at' : datetime.date.today() + datetime.timedelta(days = 1),
-            'scopes[]' : 'api'
-            }
-        r = self.post('/users/:user_id/impersonation_tokens', data, user_id = userid)
-        self.impers_tokens[userid] = r['token'];
-        return r['token']
+        raise BaseException("impers_token not found for %s" % userid)
+#        data = {
+#            'user_id' : userid,
+#            'name' : 'trac2gitlab',
+#            'expires_at' : datetime.date.today() + datetime.timedelta(days = 1),
+#            'scopes[]' : 'api'
+#            }
+#        r = self.post('/users/:user_id/impersonation_tokens', data, user_id = userid)
+#        self.impers_tokens[userid] = r['token'];
+#        return r['token']
 
     def project_by_name(self, project_name):
         projects = self.get("/projects")
@@ -234,6 +238,7 @@ class Connection(object):
         if hasattr(new_issue, 'milestone'):
             new_issue.milestone_id = new_issue.milestone
         if hasattr(new_issue, 'assignee') and new_issue.assignee is not None:
+            print(new_issue.assignee)
             new_issue.assignee_id = new_issue.assignee
             new_issue.assignee_ids = [new_issue.assignee]
         assert(hasattr(new_issue, 'reporter'))
@@ -282,10 +287,10 @@ class Connection(object):
             "body" : note.note if note.note != '' else ' ',
             "created_at" : note.created_at
         }
-        self.post("/projects/:project_id/issues/:issue_id/notes", new_note_data, project_id = project_id, issue_id = issue.id, token = token)
+        self.post("/projects/:project_id/issues/:issue_iid/notes", new_note_data, project_id = project_id, issue_iid = issue.iid, token = token)
 
     def subscribe_issue(self, project_id, issue, person) :
-        self.post("/projects/:project_id/issues/:issue_id/subscribe", {}, project_id = project_id, issue_id = issue.id, token = self.get_user_imperstoken(person))
+        self.post("/projects/:project_id/issues/:issue_iid/subscribe", {}, project_id = project_id, issue_iid = issue.iid, token = self.get_user_imperstoken(person))
 
     def update_issue_property(self, project_id, issue, author, time, propertyname) :
         if propertyname == 'labels' :
@@ -308,7 +313,7 @@ class Connection(object):
         else :
            token = self.access_token
 
-        self.put("/projects/:project_id/issues/:issue_id", data, project_id = project_id, issue_id = issue.id, token = token)
+        self.put("/projects/:project_id/issues/:issue_iid", data, project_id = project_id, issue_iid = issue.iid, token = token)
 
     def upload_file(self, project_id, author, filename, filedata) :
         token = self.get_user_imperstoken(author)

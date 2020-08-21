@@ -6,10 +6,10 @@
 url: http://username:password@example.com/trac/login/xmlrpc
 
 # optional path to trac instance used to convert some attachments
-path: /path/to/trac/instance
+#path: /path/to/trac/instance
 
 # mapping file from git hashes to subversion revisions and branche names ("hash revision @branch" in each line)
-svngitmap: /path/to/git_svn.map
+#svngitmap: /path/to/git_svn.map
 
 
 [target]
@@ -28,6 +28,16 @@ url: https://gitlab.example.com/api/v4
 
 # API access token (if method = api)
 access_token: secretsecret
+        
+user_ids = {
+    'git1': git1_id,
+    'git2': git2_id
+    }
+
+impers_tokens = {
+    git1_id: 'secret_git1_id',
+    git2_id: 'secret_git2_id'
+    }
 
 # Uncomment to verify SSL keys (default = no )
 ssl_verify: yes
@@ -55,7 +65,7 @@ target-directory: /tmp/test.wiki/
 # migrate: yes
 
 # If defined, import only these issues
-# only_issues: [ 509, 561, 564, 626, 631, 792, 830]
+only_issues: [ 1 ]
 
 # If defined, do not import these issues
 # blacklist_issues: [ 268, 843 ]
@@ -68,7 +78,7 @@ target-directory: /tmp/test.wiki/
 # add_label: Websites
 
 # Migrate keywords
-migrate_keywords: yes
+migrate_keywords: no
 
 # Migrate milestones
-migrate_milestones: no
+migrate_milestones: yes
