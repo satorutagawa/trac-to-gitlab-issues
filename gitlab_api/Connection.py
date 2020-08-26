@@ -306,7 +306,7 @@ class Connection(object):
 
         data = {propertyname : newvalue}
         if time is not None : # NOTE updated_at seems to be ignored by gitlab (see issue #3)
-           data["updated_at"] = time
+            data["updated_at"] = time
 
         if author is not None :
            token = self.get_user_imperstoken(author)

@@ -65,7 +65,7 @@ target-directory: /tmp/test.wiki/
 # migrate: yes
 
 # If defined, import only these issues
-only_issues: [ 1 ]
+# only_issues: [ 1 ]
 
 # If defined, do not import these issues
 # blacklist_issues: [ 268, 843 ]

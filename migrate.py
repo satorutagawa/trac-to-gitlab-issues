@@ -472,12 +472,12 @@ def convert_issues(source, dest, dest_project_id, only_issues = None, blacklist_
                     # workaround #3 dest.update_issue_property(dest_project_id, issue, author, change_time, 'labels')
 
                 # we map here the various statii we have in trac to just 2 statii in gitlab (open or close), so loose some information
-                if change[4] in ['new', 'assigned', 'analyzed', 'vendor', 'reopened'] :
+                if change[4] in ['new', 'assigned', 'analyzed', 'vendor', 'accepted', 'reopened'] :
                     newstate = 'open'
                 elif change[4] in ['closed'] :
                     newstate = 'closed'
                 else :
-                    raise("  unknown ticket status: " + change[4])
+                    raise BaseException("Unknown ticket status: " + change[4])
 
                 if issue.state != newstate :
                     issue.state = newstate
