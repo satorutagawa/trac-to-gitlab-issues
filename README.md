@@ -18,8 +18,27 @@ While it wasn’t all that hard, I don’t think it's worth wasting anyone else�
 ## How to run
 1. cp example/migrate.cfg.example migrate.cfg
 2. Edit migrate.cfg
+ * Fill in usernames
+ ```
+ usernames = {
+    'trac1': 'git_user1',
+    'trac2': 'git_user2'
+    }
+ ```
  * Fill in user_ids
+ ```
+user_ids = {
+    ‘git_user1’: 47,
+    ‘git_user2’: 96
+}
+```
  * Fill in impers_tokens
+ ```
+impers_tokens = {
+    47: ‘<access token for user1>’,
+    96: ‘<access token for user2>'
+}
+```
  * Any other changes as required
 3. python2 migrate.py
  * Took about 4 hours for 1100 tickets
@@ -49,10 +68,12 @@ The work around I found to retrieve User ID was the following:
 
 ### Set user_ids in migrate.cfg
 Once you know everyone’s User ID, write this on the migrate.cfg.
+```
 user_ids = {
-    ‘user1’: 47,
-    ‘user2’: 96
+    ‘git_user1’: 47,
+    ‘git_user2’: 96
 }
+```
 
 ## Token Impersonation
 
@@ -62,10 +83,12 @@ The alternative, of course, is simply for you to take credit for all the trac ti
 
 ### How to create Access Tokens
  * https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html
+ * This has to done for each gitlab user
 
 ### Set impers_tokens in migrate.cfg
-
+```
 impers_tokens = {
     47: ‘<access token for user1>’,
     96: ‘<access token for user2>'
 }
+```
