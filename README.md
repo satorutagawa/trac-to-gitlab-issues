@@ -3,7 +3,7 @@
 This is based on work by [Stefan Vigerske](https://www.gams.com/~svigerske/svn2git/index.html) in 2018, which in turn is based on [trac-to-gitlab](https://github.com/moimael/trac-to-gitlab). 
 It retrieves trac tickets via xmlrpc, then writes to gitlab via API v4.
 
-Copying over of the code is commented out as I did not need it, but it will probably work if you just uncomment it...
+Copying over of the code repository (svn -> git) is commented out as I did not need it, but it will probably work if you just uncomment it...
 
 The assumption in the previous work was that the user had admin rights to gitlab.
 But with some small changes, I was able to get it to work.
