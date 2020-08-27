@@ -11,7 +11,7 @@ While it wasn’t all that hard, I don’t think it's worth wasting anyone else�
 
 ## Assumptions
 * xmlrpc can be used for trac
-* User access to gitlab
+* User (non-admin) access to gitlab
 * All user accounts are already created on gitlab
 * Gitlab Access Token for each users can be retrieved
 
