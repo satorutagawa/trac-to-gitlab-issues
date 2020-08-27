@@ -1,4 +1,4 @@
-# trac-to-gitlab
+# trac-to-gitlab-issues
 
 This is based on work by Stefan Vigerske in 2018, which in turn is based on trac-to-gitlab. 
 It retrieves trac tickets via xmlrpc, then writes to gitlab via API v4.
